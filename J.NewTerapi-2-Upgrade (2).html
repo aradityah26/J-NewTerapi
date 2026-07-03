@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Jadwal Terapis</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, sans-serif;
+}
+
+body{
+    background:#f3f6fb;
+    padding:20px;
+    color:#222;
+}
+
+.container{
+    max-width:1600px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:20px;
+    color:#1e40af;
+}
+
+textarea{
+    width:100%;
+    min-height:280px;
+    padding:15px;
+    border:1px solid #ccc;
+    border-radius:12px;
+    resize:vertical;
+    font-size:14px;
+    line-height:1.5;
+}
+
+.controls{
+    margin:20px 0;
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:center;
+}
+
+input[type="date"]{
+    padding:12px;
+    border-radius:10px;
+    border:1px solid #ccc;
+}
+
+button{
+    padding:12px 18px;
+    border:none;
+    border-radius:10px;
+    background:#2563eb;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+button.secondary{
+    background:#6b7280;
+}
+button.secondary:hover{
+    background:#4b5563;
+}
+
+button.danger{
+    background:#dc2626;
+}
+button.danger:hover{
+    background:#b91c1c;
+}
+
+button.success{
+    background:#16a34a;
+}
+button.success:hover{
+    background:#15803d;
+}
+
+#scheduleDate{
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+    margin-bottom:15px;
+    color:#1e40af;
+}
+
+.table-wrapper{
+    background:white;
+    padding:20px;
+    border-radius:16px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.08);
+    overflow:visible !important;
+    display:inline-block;
+    width:100%;
+}
+
+table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:max-content;
+}
+
+th, td{
+    border:2px solid #d1d5db;
+    padding:12px;
+    text-align:center;
+    vertical-align:top;
+    min-width:140px;
+}
+
+th{
+    background:#1e40af;
+    color:white;
+    font-size:18px;
+}
+
+td:first-child{
+    font-weight:bold;
+    min-width:180px;
+}
+
+ul{
+    text-align:left;
+    padding-left:18px;
+}
+
+li{
+    margin-bottom:4px;
+}
+
+/* ===== CHART STYLES ===== */
+.chart-section{
+    margin-top:40px;
+    background:white;
+    padding:20px;
+    border-radius:16px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.08);
+}
+
+.chart-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.chart-header h2{
+    color:#1e40af;
+    font-size:20px;
+}
+
+.chart-controls{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+}
+
+.chart-controls select{
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    font-size:14px;
+}
+
+.chart-canvas-container{
+    position:relative;
+    width:100%;
+    height:450px;
+    background:#fafafa;
+    border-radius:12px;
+    border:1px solid #e5e7eb;
+    overflow:hidden;
+}
+
+.chart-canvas-container canvas{
+    display:block;
+}
+
+.chart-legend{
+    display:flex;
+    gap:20px;
+    margin-top:15px;
+    flex-wrap:wrap;
+    justify-content:center;
+}
+
+.legend-item{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:14px;
+}
+
+.legend-color{
+    width:20px;
+    height:4px;
+    border-radius:2px;
+}
+
+.total-info{
+    margin-top:15px;
+    padding:15px;
+    background:#eff6ff;
+    border-radius:10px;
+    text-align:center;
+    font-size:16px;
+    font-weight:bold;
+    color:#1e40af;
+}
+
+.week-selector{
+    display:none;
+}
+
+.week-selector.visible{
+    display:block;
+}
+
+.no-data-msg{
+    text-align:center;
+    padding:40px;
+    color:#6b7280;
+    font-style:italic;
+}
+
+/* ===== RANGE SLIDER ===== */
+.range-control{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-width:170px;
+}
+.range-control label{
+    font-size:12px;
+    font-weight:bold;
+    color:#374151;
+}
+.range-inputs{
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+.range-inputs input[type=range]{
+    flex:1;
+    min-width:60px;
+    cursor:pointer;
+}
+.range-inputs span{
+    font-size:11px;
+    color:#6b7280;
+}
+
+/* ===== PIE CHART STYLES ===== */
+.pie-section{
+    margin-top:40px;
+    background:white;
+    padding:20px;
+    border-radius:16px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.08);
+}
+
+.pie-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.pie-header h2{
+    color:#1e40af;
+    font-size:20px;
+}
+
+.pie-container{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:40px;
+    flex-wrap:wrap;
+    min-height:400px;
+}
+
+.pie-canvas-wrapper{
+    position:relative;
+    width:350px;
+    height:350px;
+}
+
+.pie-canvas-wrapper canvas{
+    display:block;
+}
+
+.pie-center-text{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    pointer-events:none;
+}
+
+.pie-center-text .pie-total-number{
+    font-size:32px;
+    font-weight:bold;
+    color:#1e40af;
+}
+
+.pie-center-text .pie-total-label{
+    font-size:13px;
+    color:#6b7280;
+}
+
+.pie-legend-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-width:200px;
+}
+
+.pie-legend-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 12px;
+    background:#f9fafb;
+    border-radius:8px;
+}
+
+.pie-legend-dot{
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    flex-shrink:0;
+}
+
+.pie-legend-info{
+    flex:1;
+}
+
+.pie-legend-name{
+    font-weight:bold;
+    font-size:14px;
+    color:#1f2937;
+}
+
+.pie-legend-count{
+    font-size:12px;
+    color:#6b7280;
+}
+
+.pie-legend-percent{
+    font-weight:bold;
+    font-size:16px;
+    color:#1e40af;
+}
+
+/* ===== BENTO GRID RIWAYAT ===== */
+.accordion-section{
+    margin-top:40px;
+    background:white;
+    padding:20px;
+    border-radius:16px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.08);
+}
+
+.accordion-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+}
+
+.accordion-header h2{
+    color:#1e40af;
+    font-size:20px;
+}
+
+.sort-buttons{
+    display:flex;
+    gap:8px;
+}
+
+#accordionContainer{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+    gap:5px;
+    align-items:start;
+}
+
+.month-label{
+    grid-column:1 / -1;
+    font-size:20px;
+    font-weight:bold;
+    color:#1e40af;
+    margin:15px 0 5px 0;
+    padding-left:10px;
+    border-left:5px solid #2563eb;
+}
+
+.bento-card{
+    background:#ffffff;
+    border:1px solid #d1d5db;
+    border-radius:12px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    box-shadow:0 2px 8px rgba(0,0,0,0.06);
+    transition:transform 0.15s, box-shadow 0.15s;
+}
+.bento-card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 16px rgba(0,0,0,0.1);
+}
+
+.bento-card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 14px;
+    background:#f3f4f6;
+    border-bottom:1px solid #e5e7eb;
+}
+
+.bento-date{
+    font-weight:bold;
+    font-size:14px;
+    color:#1f2937;
+}
+
+.bento-actions{
+    display:flex;
+    gap:6px;
+}
+
+.bento-actions button{
+    padding:6px 10px;
+    font-size:12px;
+    border-radius:6px;
+}
+
+.bento-card-body{
+    padding:10px;
+    font-size:12px;
+    overflow-x:auto;
+}
+
+.bento-card-body table{
+    width:100%;
+    font-size:12px;
+    border-collapse:collapse;
+}
+
+.bento-card-body th, .bento-card-body td{
+    border:1px solid #d1d5db;
+    padding:5px;
+    text-align:center;
+    vertical-align:top;
+}
+
+.bento-card-body th{
+    background:#1e40af;
+    color:white;
+    font-size:12px;
+}
+
+.bento-card-body td:first-child{
+    font-weight:bold;
+    min-width:auto;
+}
+
+.bento-card-body ul{
+    text-align:left;
+    padding-left:14px;
+    margin:0;
+}
+
+.bento-card-body li{
+    margin-bottom:2px;
+    font-size:12px;
+}
+
+/* ===== TOAST NOTIFICATION ===== */
+.toast{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    background:#16a34a;
+    color:white;
+    padding:12px 20px;
+    border-radius:10px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    font-weight:bold;
+    opacity:0;
+    transform:translateY(20px);
+    transition:all 0.3s;
+    z-index:1000;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Generator Jadwal Terapis</h1>
+
+    <textarea id="inputData" placeholder="Paste data list di sini...
+Contoh:
+1. Andi (08.00) Salsa
+2. Budi (09.00) Rina
+3. Caca (08.00) Salsa"></textarea>
+
+    <div class="controls">
+        <input type="date" id="datePicker">
+        <button onclick="generateTable()">Generate Tabel</button>
+        <button class="success" onclick="saveToAccordion()">Simpan ke Riwayat</button>
+        <button onclick="downloadImage()">Unduh PNG</button>
+        <button class="secondary" onclick="downloadJSON()">📥 Unduh JSON</button>
+    </div>
+
+    <div id="captureArea" class="table-wrapper">
+        <div id="scheduleDate"></div>
+        <table id="scheduleTable"></table>
+    </div>
+
+    <!-- ===== GRAFIK SECTION ===== -->
+    <div class="chart-section" id="chartSection">
+        <div class="chart-header">
+            <h2>📊 Grafik Statistik Terapis</h2>
+            <div class="chart-controls">
+                <select id="chartPeriod" onchange="updateChart()">
+                    <option value="weekly">Mingguan</option>
+                    <option value="monthly">Bulanan</option>
+                </select>
+                <select id="chartWeek" class="week-selector" onchange="updateChart()">
+                    <option value="1">Minggu 1</option>
+                    <option value="2">Minggu 2</option>
+                    <option value="3">Minggu 3</option>
+                    <option value="4">Minggu 4</option>
+                    <option value="5">Minggu 5</option>
+                </select>
+                <select id="chartTherapist" onchange="updateChart()">
+                    <option value="all">Semua Terapis</option>
+                </select>
+                <select id="chartMonth" onchange="updateChart()">
+                    <option value="all">Semua Bulan</option>
+                </select>
+                <div class="range-control">
+                    <label>Rentang: <span id="chartRangeLabel">1 - 31</span></label>
+                    <div class="range-inputs">
+                        <input type="range" id="chartRangeStart" min="1" max="31" value="1" oninput="updateChartRange()">
+                        <span>s/d</span>
+                        <input type="range" id="chartRangeEnd" min="1" max="31" value="31" oninput="updateChartRange()">
+                    </div>
+                </div>
+                <button class="secondary" onclick="downloadChartImage()">📷 Unduh Grafik</button>
+            </div>
+        </div>
+        <div class="chart-canvas-container" id="chartContainer">
+            <canvas id="tradingChart"></canvas>
+        </div>
+        <div class="chart-legend" id="chartLegend"></div>
+        <div class="total-info" id="totalInfo"></div>
+    </div>
+
+    <!-- ===== PIE CHART SECTION ===== -->
+    <div class="pie-section" id="pieSection">
+        <div class="pie-header">
+            <h2>🥧 Grafik Pie - Proporsi Anak per Terapis</h2>
+            <div class="chart-controls">
+                <select id="piePeriod" onchange="updatePieChart()">
+                    <option value="weekly">Mingguan</option>
+                    <option value="monthly">Bulanan</option>
+                </select>
+                <select id="pieWeek" class="week-selector" onchange="updatePieChart()">
+                    <option value="1">Minggu 1</option>
+                    <option value="2">Minggu 2</option>
+                    <option value="3">Minggu 3</option>
+                    <option value="4">Minggu 4</option>
+                    <option value="5">Minggu 5</option>
+                </select>
+                <select id="pieTherapist" onchange="updatePieChart()">
+                    <option value="all">Semua Terapis</option>
+                </select>
+                <select id="pieMonth" onchange="updatePieChart()">
+                    <option value="all">Semua Bulan</option>
+                </select>
+                <div class="range-control">
+                    <label>Rentang: <span id="pieRangeLabel">1 - 31</span></label>
+                    <div class="range-inputs">
+                        <input type="range" id="pieRangeStart" min="1" max="31" value="1" oninput="updatePieRange()">
+                        <span>s/d</span>
+                        <input type="range" id="pieRangeEnd" min="1" max="31" value="31" oninput="updatePieRange()">
+                    </div>
+                </div>
+                <button class="secondary" onclick="downloadPieImage()">📷 Unduh Pie</button>
+            </div>
+        </div>
+        <div class="pie-container" id="pieContainer">
+            <div class="pie-canvas-wrapper">
+                <canvas id="pieChart" width="350" height="350"></canvas>
+                <div class="pie-center-text" id="pieCenterText">
+                    <div class="pie-total-number" id="pieTotalNum">0</div>
+                    <div class="pie-total-label">Total Anak</div>
+                </div>
+            </div>
+            <div class="pie-legend-list" id="pieLegend"></div>
+        </div>
+    </div>
+
+    <!-- ===== ACCORDION SECTION ===== -->
+    <div class="accordion-section" id="accordionSection">
+        <div class="accordion-header">
+            <h2>📁 Riwayat Jadwal Tersimpan</h2>
+            <div class="sort-buttons">
+                <button class="secondary" onclick="sortAccordion('asc')">📅 Awal → Akhir</button>
+                <button class="secondary" onclick="sortAccordion('desc')">📅 Akhir → Awal</button>
+            </div>
+        </div>
+        <div id="accordionContainer"></div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== PALETTE & UTILS =====
+const colorPalette = [
+    "#DBEAFE", "#DCFCE7", "#FCE7F3", "#FEF3C7", "#EDE9FE",
+    "#FEE2E2", "#CCFBF1", "#E0F2FE", "#F3E8FF", "#ECFCCB"
+];
+
+const therapistColors = [
+    "#ef4444", "#3b82f6", "#22c55e", "#f59e0b", "#8b5cf6",
+    "#ec4899", "#14b8a6", "#f97316", "#6366f1", "#84cc16"
+];
+
+let currentData = [];
+let currentDate = "";
+let accordionData = [];
+let sortDirection = "desc";
+
+function getColor(index){
+    return colorPalette[index % colorPalette.length];
+}
+
+function getTherapistColor(index){
+    return therapistColors[index % therapistColors.length];
+}
+
+function formatTanggal(dateValue){
+    if(!dateValue) return "";
+    const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jum'at","Sabtu"];
+    const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    const date = new Date(dateValue + "T00:00:00");
+    return hari[date.getDay()] + ", " + date.getDate() + " " + bulan[date.getMonth()] + " " + date.getFullYear();
+}
+
+function formatBulan(dateValue){
+    if(!dateValue) return "";
+    const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    const date = new Date(dateValue + "T00:00:00");
+    return bulan[date.getMonth()];
+}
+
+function formatTahunBulan(dateValue){
+    if(!dateValue) return "";
+    const date = new Date(dateValue + "T00:00:00");
+    return date.getFullYear() + "-" + String(date.getMonth()+1).padStart(2,'0');
+}
+
+function getWeekOfMonth(dateValue){
+    var date = new Date(dateValue + "T00:00:00");
+    var year = date.getFullYear();
+    var month = date.getMonth();
+    var firstDayOfMonth = new Date(year, month, 1);
+    var firstDayWeekday = firstDayOfMonth.getDay();
+    var firstMonday = new Date(year, month, 1);
+    var diff = firstDayWeekday - 1;
+    if (diff < 0) diff = 6;
+    firstMonday.setDate(firstMonday.getDate() - diff);
+    var oneDay = 24 * 60 * 60 * 1000;
+    var diffDays = Math.floor((date - firstMonday) / oneDay);
+    return Math.floor(diffDays / 7) + 1;
+}
+
+function getDayName(dateValue){
+    const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jum'at","Sabtu"];
+    const date = new Date(dateValue + "T00:00:00");
+    return hari[date.getDay()];
+}
+
+function getDayOfMonth(dateValue){
+    const date = new Date(dateValue + "T00:00:00");
+    return date.getDate();
+}
+
+function sanitizeFilename(dateValue){
+    if(!dateValue) return "jadwal-terapis";
+    const date = new Date(dateValue + "T00:00:00");
+    const dd = String(date.getDate()).padStart(2,'0');
+    const mm = String(date.getMonth()+1).padStart(2,'0');
+    const yyyy = date.getFullYear();
+    return "jadwal-terapis-" + dd + "-" + mm + "-" + yyyy;
+}
+
+function showToast(msg){
+    const t = document.getElementById("toast");
+    t.innerText = msg;
+    t.classList.add("show");
+    setTimeout(function(){ t.classList.remove("show"); }, 2500);
+}
+
+// ===== PARSE DATA =====
+function parseData(raw){
+    const lines = raw.split("\n");
+    const result = [];
+    lines.forEach(function(line){
+        line = line.trim();
+        if(!line) return;
+        const match = line.match(/\d+\.\s*(.*?)\s*\(([\d.]+)\)\s*(.*)/);
+        if(match){
+            result.push({
+                child: match[1].trim() || "-",
+                time: match[2].trim(),
+                therapist: match[3].trim() || "-"
+            });
+        }
+    });
+    return result;
+}
+
+// ===== GENERATE TABLE =====
+function generateTable(){
+    const raw = document.getElementById("inputData").value;
+    const data = parseData(raw);
+
+    if(data.length === 0){
+        alert("Data tidak terbaca. Pastikan format benar.\nContoh: 1. Andi (08.00) Salsa");
+        return;
+    }
+
+    currentData = data;
+    currentDate = document.getElementById("datePicker").value;
+    document.getElementById("scheduleDate").innerText = formatTanggal(currentDate);
+
+    const times = [];
+    const timeSet = {};
+    data.forEach(function(item){ timeSet[item.time] = true; });
+    for(var t in timeSet){ times.push(t); }
+    times.sort(function(a,b){ return a.replace(".","") - b.replace(".",""); });
+
+    const therapists = [];
+    const therapistSet = {};
+    data.forEach(function(item){ if(item.therapist !== "-") therapistSet[item.therapist] = true; });
+    for(var th in therapistSet){ therapists.push(th); }
+
+    const grouped = {};
+    therapists.forEach(function(therapist){
+        grouped[therapist] = {};
+        times.forEach(function(time){ grouped[therapist][time] = []; });
+    });
+
+    data.forEach(function(item){
+        if(item.therapist !== "-" && grouped[item.therapist]){
+            grouped[item.therapist][item.time].push(item.child);
+        }
+    });
+
+    var html = "<tr><th>Nama Terapis/Pengajar</th>";
+    times.forEach(function(time){ html += "<th>" + time + "</th>"; });
+    html += "<th>Total</th></tr>";
+
+    therapists.forEach(function(therapist, index){
+        const color = getColor(index);
+        html += '<tr style="background:' + color + '"><td>' + therapist + '</td>';
+        var totalChildren = 0;
+        times.forEach(function(time){
+            const children = grouped[therapist][time];
+            if(children.length){
+                html += '<td><ul>' + children.map(function(child){ return '<li>' + child + '</li>'; }).join("") + '</ul></td>';
+                totalChildren += children.length;
+            }else{
+                html += '<td></td>';
+            }
+        });
+        html += '<td style="font-weight:bold;font-size:16px;">' + totalChildren + '</td></tr>';
+    });
+
+    document.getElementById("scheduleTable").innerHTML = html;
+    updateChart();
+}
+
+// ===== DOWNLOAD IMAGE =====
+function downloadImage(){
+    const element = document.getElementById("captureArea");
+    const selectedDate = document.getElementById("datePicker").value;
+    const filename = sanitizeFilename(selectedDate);
+
+    const originalWidth = element.style.width;
+    const originalMaxWidth = element.style.maxWidth;
+    const originalOverflow = element.style.overflow;
+    const originalDisplay = element.style.display;
+
+    element.style.width = "auto";
+    element.style.maxWidth = "none";
+    element.style.overflow = "visible";
+    element.style.display = "inline-block";
+
+    window.scrollTo(0, 0);
+
+    const table = document.getElementById("scheduleTable");
+    const rect = element.getBoundingClientRect();
+    const scrollWidth = element.scrollWidth;
+    const scrollHeight = element.scrollHeight;
+
+    html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        width: scrollWidth,
+        height: scrollHeight,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: scrollWidth,
+        windowHeight: scrollHeight
+    }).then(function(originalCanvas){
+        element.style.width = originalWidth;
+        element.style.maxWidth = originalMaxWidth;
+        element.style.overflow = originalOverflow;
+        element.style.display = originalDisplay;
+
+        const pad = 40;
+        const finalCanvas = document.createElement("canvas");
+        finalCanvas.width = originalCanvas.width + (pad * 2);
+        finalCanvas.height = originalCanvas.height + (pad * 2);
+
+        const ctx = finalCanvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+        ctx.drawImage(originalCanvas, pad, pad);
+
+        const link = document.createElement("a");
+        link.download = filename + ".png";
+        link.href = finalCanvas.toDataURL("image/png");
+        link.click();
+    }).catch(function(err){
+        element.style.width = originalWidth;
+        element.style.maxWidth = originalMaxWidth;
+        element.style.overflow = originalOverflow;
+        element.style.display = originalDisplay;
+        console.error(err);
+        alert("Gagal mengunduh gambar.");
+    });
+}
+
+// ===== LOCALSTORAGE =====
+function loadFromStorage(){
+    try{
+        const stored = localStorage.getItem("therapist_schedules");
+        if(stored){
+            accordionData = JSON.parse(stored);
+        }
+    }catch(e){ accordionData = []; }
+}
+
+function saveToStorage(){
+    localStorage.setItem("therapist_schedules", JSON.stringify(accordionData));
+}
+
+// ===== SAVE TO ACCORDION =====
+function saveToAccordion(){
+    if(currentData.length === 0 || !currentDate){
+        alert("Generate tabel terlebih dahulu!");
+        return;
+    }
+
+    var exists = null;
+    for(var i=0; i<accordionData.length; i++){
+        if(accordionData[i].date === currentDate){ exists = accordionData[i]; break; }
+    }
+
+    if(exists){
+        if(!confirm("Jadwal untuk tanggal ini sudah ada. Timpa data lama?")) return;
+        exists.data = currentData;
+        exists.savedAt = new Date().toISOString();
+    }else{
+        accordionData.push({
+            date: currentDate,
+            data: currentData,
+            savedAt: new Date().toISOString()
+        });
+    }
+
+    saveToStorage();
+    renderAccordion();
+    updateChart();
+    populateChartMonthFilter();
+    populatePieMonthFilter();
+    populatePieTherapistFilter();
+    updatePieChart();
+    showToast("Jadwal berhasil disimpan!");
+}
+
+function deleteSchedule(date){
+    if(!confirm("Yakin hapus jadwal ini?")) return;
+    var newData = [];
+    for(var i=0; i<accordionData.length; i++){
+        if(accordionData[i].date !== date) newData.push(accordionData[i]);
+    }
+    accordionData = newData;
+    saveToStorage();
+    renderAccordion();
+    updateChart();
+    populateChartMonthFilter();
+    populatePieMonthFilter();
+    populatePieTherapistFilter();
+    updatePieChart();
+    showToast("Jadwal dihapus.");
+}
+
+// ===== RENDER BENTO GRID =====
+function renderAccordion(){
+    const container = document.getElementById("accordionContainer");
+    container.innerHTML = "";
+
+    if(accordionData.length === 0){
+        container.innerHTML = '<div class="no-data-msg">Belum ada data tersimpan.</div>';
+        return;
+    }
+
+    var sorted = accordionData.slice().sort(function(a,b){
+        var da = new Date(a.date + "T00:00:00");
+        var db = new Date(b.date + "T00:00:00");
+        return sortDirection === "asc" ? da - db : db - da;
+    });
+
+    var groupedByMonth = {};
+    sorted.forEach(function(item){
+        var monthKey = formatTahunBulan(item.date);
+        var monthLabel = formatBulan(item.date);
+        if(!groupedByMonth[monthKey]){
+            groupedByMonth[monthKey] = { label: monthLabel, yearMonth: monthKey, items: [] };
+        }
+        groupedByMonth[monthKey].items.push(item);
+    });
+
+    var monthKeys = Object.keys(groupedByMonth).sort(function(a,b){
+        return sortDirection === "asc" ? a.localeCompare(b) : b.localeCompare(a);
+    });
+
+    monthKeys.forEach(function(key){
+        var group = groupedByMonth[key];
+
+        var label = document.createElement("div");
+        label.className = "month-label";
+        label.innerText = group.label + " " + key.split("-")[0];
+        container.appendChild(label);
+
+        group.items.forEach(function(item){
+            var card = document.createElement("div");
+            card.className = "bento-card";
+
+            var header = document.createElement("div");
+            header.className = "bento-card-header";
+            header.innerHTML = '<span class="bento-date">' + formatTanggal(item.date) + '</span>' +
+                '<div class="bento-actions">' +
+                '<button class="secondary" onclick="loadToEditor(\'' + item.date + '\')" title="Edit">&#9998;</button>' +
+                '<button class="danger" onclick="deleteSchedule(\'' + item.date + '\')" title="Hapus">&#128465;</button>' +
+                '</div>';
+
+            var body = document.createElement("div");
+            body.className = "bento-card-body";
+            body.innerHTML = generateMiniTable(item.data);
+
+            card.appendChild(header);
+            card.appendChild(body);
+            container.appendChild(card);
+        });
+    });
+}
+
+function generateMiniTable(data){
+    var times = [];
+    var timeSet = {};
+    data.forEach(function(item){ timeSet[item.time] = true; });
+    for(var t in timeSet){ times.push(t); }
+    times.sort(function(a,b){ return a.replace(".","") - b.replace(".",""); });
+
+    var therapists = [];
+    var therapistSet = {};
+    data.forEach(function(item){ if(item.therapist !== "-") therapistSet[item.therapist] = true; });
+    for(var th in therapistSet){ therapists.push(th); }
+
+    var grouped = {};
+    therapists.forEach(function(t){ grouped[t] = {}; times.forEach(function(tm){ grouped[t][tm] = []; }); });
+    data.forEach(function(item){ if(item.therapist !== "-" && grouped[item.therapist]) grouped[item.therapist][item.time].push(item.child); });
+
+    var html = '<table><tr><th>Terapis</th>';
+    times.forEach(function(t){ html += '<th>' + t + '</th>'; });
+    html += '<th>Total</th></tr>';
+    therapists.forEach(function(t,i){
+        html += '<tr style="background:' + getColor(i) + '"><td>' + t + '</td>';
+        var totalChildren = 0;
+        times.forEach(function(tm){
+            var children = grouped[t][tm];
+            if(children.length){
+                html += '<td><ul>' + children.map(function(c){ return '<li>' + c + '</li>'; }).join("") + '</ul></td>';
+                totalChildren += children.length;
+            }else{
+                html += '<td></td>';
+            }
+        });
+        html += '<td style="font-weight:bold;text-align:center;">' + totalChildren + '</td></tr>';
+    });
+    html += '</table>';
+    return html;
+}
+
+function loadToEditor(date){
+    var item = null;
+    for(var i=0; i<accordionData.length; i++){
+        if(accordionData[i].date === date){ item = accordionData[i]; break; }
+    }
+    if(!item) return;
+
+    var raw = "";
+    item.data.forEach(function(d,i){
+        raw += (i+1) + ". " + d.child + " (" + d.time + ") " + d.therapist + "\n";
+    });
+    document.getElementById("inputData").value = raw.trim();
+    document.getElementById("datePicker").value = date;
+    generateTable();
+    showToast("Data dimuat ke editor!");
+    window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function sortAccordion(direction){
+    sortDirection = direction;
+    renderAccordion();
+}
+
+// ===== CHART SYSTEM =====
+function populateChartMonthFilter(){
+    var select = document.getElementById("chartMonth");
+    var currentVal = select.value;
+    var months = [];
+    var monthSet = {};
+    accordionData.forEach(function(item){ monthSet[formatTahunBulan(item.date)] = true; });
+    for(var m in monthSet){ months.push(m); }
+    months.sort();
+
+    select.innerHTML = '<option value="all">Semua Bulan</option>';
+    var bulan = ["","Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    months.forEach(function(m){
+        var parts = m.split("-");
+        var opt = document.createElement("option");
+        opt.value = m;
+        opt.innerText = bulan[parseInt(parts[1])] + " " + parts[0];
+        select.appendChild(opt);
+    });
+    select.value = currentVal;
+}
+
+function populateTherapistFilter(){
+    var select = document.getElementById("chartTherapist");
+    var currentVal = select.value;
+    var allTherapists = [];
+    var thSet = {};
+    accordionData.forEach(function(item){
+        item.data.forEach(function(d){ if(d.therapist !== "-") thSet[d.therapist] = true; });
+    });
+    for(var t in thSet){ allTherapists.push(t); }
+
+    select.innerHTML = '<option value="all">Semua Terapis</option>';
+    allTherapists.forEach(function(t){
+        var opt = document.createElement("option");
+        opt.value = t;
+        opt.innerText = t;
+        select.appendChild(opt);
+    });
+    select.value = currentVal;
+}
+
+function updateChartRange(){
+    var start = parseInt(document.getElementById("chartRangeStart").value);
+    var end = parseInt(document.getElementById("chartRangeEnd").value);
+    if(start > end){
+        document.getElementById("chartRangeLabel").innerText = end + " - " + start;
+    } else {
+        document.getElementById("chartRangeLabel").innerText = start + " - " + end;
+    }
+    updateChart();
+}
+
+function updateChart(){
+    var period = document.getElementById("chartPeriod").value;
+    var weekNum = document.getElementById("chartWeek").value;
+    var therapistFilter = document.getElementById("chartTherapist").value;
+    var monthFilter = document.getElementById("chartMonth").value;
+    var rangeStart = parseInt(document.getElementById("chartRangeStart").value);
+    var rangeEnd = parseInt(document.getElementById("chartRangeEnd").value);
+    if(rangeStart > rangeEnd){ var t=rangeStart; rangeStart=rangeEnd; rangeEnd=t; }
+
+    document.getElementById("chartWeek").classList.toggle("visible", period === "weekly");
+
+    if(accordionData.length === 0){
+        drawEmptyChart();
+        return;
+    }
+
+    var filtered = accordionData.slice();
+    if(monthFilter !== "all"){
+        filtered = filtered.filter(function(item){ return formatTahunBulan(item.date) === monthFilter; });
+    }
+
+    var allTherapists = [];
+    var thSet = {};
+    accordionData.forEach(function(item){
+        item.data.forEach(function(d){ if(d.therapist !== "-") thSet[d.therapist] = true; });
+    });
+    for(var t in thSet){ allTherapists.push(t); }
+
+    var displayTherapists = therapistFilter === "all" ? allTherapists : [therapistFilter];
+
+    var canvas = document.getElementById("tradingChart");
+    var container = document.getElementById("chartContainer");
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width;
+    var H = canvas.height;
+
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = "#fafafa";
+    ctx.fillRect(0,0,W,H);
+
+    var padding = {top:50, right:60, bottom:60, left:60};
+    var chartW = W - padding.left - padding.right;
+    var chartH = H - padding.top - padding.bottom;
+
+    if(period === "weekly"){
+        var weekData = {};
+        var days = ["Senin","Selasa","Rabu","Kamis","Jum'at","Sabtu","Minggu"];
+
+        displayTherapists.forEach(function(t){
+            weekData[t] = {};
+            days.forEach(function(d){ weekData[t][d] = 0; });
+        });
+
+        filtered.forEach(function(item){
+            var wk = getWeekOfMonth(item.date);
+            if(wk != weekNum) return;
+            var dayOfMonth = getDayOfMonth(item.date);
+            if(dayOfMonth < rangeStart || dayOfMonth > rangeEnd) return;
+            var dayName = getDayName(item.date);
+            item.data.forEach(function(d){
+                if(d.therapist !== "-" && weekData[d.therapist]){
+                    weekData[d.therapist][dayName]++;
+                }
+            });
+        });
+
+        var maxVal = 0;
+        Object.values(weekData).forEach(function(tData){
+            Object.values(tData).forEach(function(v){ if(v>maxVal) maxVal=v; });
+        });
+        maxVal = Math.max(maxVal, 1);
+
+        ctx.strokeStyle = "#e5e7eb";
+        ctx.lineWidth = 1;
+        for(var i=0; i<=5; i++){
+            var y = padding.top + chartH - (i/5)*chartH;
+            ctx.beginPath();
+            ctx.moveTo(padding.left, y);
+            ctx.lineTo(padding.left+chartW, y);
+            ctx.stroke();
+            ctx.fillStyle = "#6b7280";
+            ctx.font = "12px Arial";
+            ctx.textAlign = "right";
+            ctx.fillText(Math.round(maxVal * i/5), padding.left-10, y+4);
+        }
+
+        var dayOrder = ["Senin","Selasa","Rabu","Kamis","Jum'at","Sabtu","Minggu"];
+        var stepX = chartW / (dayOrder.length - 1 || 1);
+        dayOrder.forEach(function(day,i){
+            var x = padding.left + i*stepX;
+            ctx.fillStyle = "#374151";
+            ctx.font = "bold 13px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(day, x, H - padding.bottom + 25);
+        });
+
+        displayTherapists.forEach(function(therapist){
+            var color = getTherapistColor(allTherapists.indexOf(therapist));
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+
+            dayOrder.forEach(function(day, i){
+                var val = weekData[therapist][day] || 0;
+                var x = padding.left + i*stepX;
+                var y = padding.top + chartH - (val/maxVal)*chartH;
+                if(i===0) ctx.moveTo(x,y);
+                else ctx.lineTo(x,y);
+            });
+            ctx.stroke();
+
+            dayOrder.forEach(function(day, i){
+                var val = weekData[therapist][day] || 0;
+                var x = padding.left + i*stepX;
+                var y = padding.top + chartH - (val/maxVal)*chartH;
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "white";
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI*2);
+                ctx.fill();
+
+                if(val > 0){
+                    ctx.fillStyle = "#1f2937";
+                    ctx.font = "bold 12px Arial";
+                    ctx.textAlign = "center";
+                    ctx.fillText(val, x, y - 12);
+                }
+            });
+        });
+
+        ctx.fillStyle = "#1e40af";
+        ctx.font = "bold 16px Arial";
+        ctx.textAlign = "center";
+        var monthText = "";
+        if(monthFilter !== "all"){
+            monthText = " (" + document.getElementById("chartMonth").options[document.getElementById("chartMonth").selectedIndex].text + ")";
+        }
+        ctx.fillText("Grafik Mingguan - Minggu " + weekNum + monthText, W/2, 30);
+
+        var total = 0;
+        filtered.forEach(function(item){
+            if(getWeekOfMonth(item.date) == weekNum){
+                var dayOfMonth = getDayOfMonth(item.date);
+                if(dayOfMonth >= rangeStart && dayOfMonth <= rangeEnd){
+                    item.data.forEach(function(d){ if(d.therapist !== "-") total++; });
+                }
+            }
+        });
+        document.getElementById("totalInfo").innerText = "Total Anak Terapi Minggu " + weekNum + ": " + total + " anak";
+
+    }else{
+        var monthData = {};
+        var weekLabels = ["Minggu 1","Minggu 2","Minggu 3","Minggu 4","Minggu 5"];
+
+        displayTherapists.forEach(function(t){
+            monthData[t] = [0,0,0,0,0];
+        });
+
+        filtered.forEach(function(item){
+            var dayOfMonth = getDayOfMonth(item.date);
+            if(dayOfMonth < rangeStart || dayOfMonth > rangeEnd) return;
+            var wk = getWeekOfMonth(item.date);
+            item.data.forEach(function(d){
+                if(d.therapist !== "-" && monthData[d.therapist]){
+                    monthData[d.therapist][wk-1]++;
+                }
+            });
+        });
+
+        var maxVal = 0;
+        Object.values(monthData).forEach(function(tData){
+            tData.forEach(function(v){ if(v>maxVal) maxVal=v; });
+        });
+        maxVal = Math.max(maxVal, 1);
+
+        ctx.strokeStyle = "#e5e7eb";
+        ctx.lineWidth = 1;
+        for(var i=0; i<=5; i++){
+            var y = padding.top + chartH - (i/5)*chartH;
+            ctx.beginPath();
+            ctx.moveTo(padding.left, y);
+            ctx.lineTo(padding.left+chartW, y);
+            ctx.stroke();
+            ctx.fillStyle = "#6b7280";
+            ctx.font = "12px Arial";
+            ctx.textAlign = "right";
+            ctx.fillText(Math.round(maxVal * i/5), padding.left-10, y+4);
+        }
+
+        var stepX = chartW / 4;
+        weekLabels.forEach(function(wl,i){
+            var x = padding.left + i*stepX;
+            ctx.fillStyle = "#374151";
+            ctx.font = "bold 13px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(wl, x, H - padding.bottom + 25);
+        });
+
+        displayTherapists.forEach(function(therapist){
+            var color = getTherapistColor(allTherapists.indexOf(therapist));
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+
+            weekLabels.forEach(function(wl, i){
+                var val = monthData[therapist][i] || 0;
+                var x = padding.left + i*stepX;
+                var y = padding.top + chartH - (val/maxVal)*chartH;
+                if(i===0) ctx.moveTo(x,y);
+                else ctx.lineTo(x,y);
+            });
+            ctx.stroke();
+
+            weekLabels.forEach(function(wl, i){
+                var val = monthData[therapist][i] || 0;
+                var x = padding.left + i*stepX;
+                var y = padding.top + chartH - (val/maxVal)*chartH;
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "white";
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI*2);
+                ctx.fill();
+
+                if(val > 0){
+                    ctx.fillStyle = "#1f2937";
+                    ctx.font = "bold 12px Arial";
+                    ctx.textAlign = "center";
+                    ctx.fillText(val, x, y - 12);
+                }
+            });
+        });
+
+        ctx.fillStyle = "#1e40af";
+        ctx.font = "bold 16px Arial";
+        ctx.textAlign = "center";
+        var monthText2 = "";
+        if(monthFilter !== "all"){
+            monthText2 = " - " + document.getElementById("chartMonth").options[document.getElementById("chartMonth").selectedIndex].text;
+        }
+        ctx.fillText("Grafik Bulanan" + monthText2, W/2, 30);
+
+        var total = 0;
+        filtered.forEach(function(item){
+            var dayOfMonth = getDayOfMonth(item.date);
+            if(dayOfMonth >= rangeStart && dayOfMonth <= rangeEnd){
+                item.data.forEach(function(d){ if(d.therapist !== "-") total++; });
+            }
+        });
+        document.getElementById("totalInfo").innerText = "Total Anak Terapi Bulanan: " + total + " anak";
+    }
+
+    var legendContainer = document.getElementById("chartLegend");
+    legendContainer.innerHTML = "";
+    displayTherapists.forEach(function(t){
+        var color = getTherapistColor(allTherapists.indexOf(t));
+        legendContainer.innerHTML += '<div class="legend-item"><div class="legend-color" style="background:' + color + '"></div><span>' + t + '</span></div>';
+    });
+}
+
+function drawEmptyChart(){
+    var canvas = document.getElementById("tradingChart");
+    var container = document.getElementById("chartContainer");
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
+    var ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fafafa";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#9ca3af";
+    ctx.font = "16px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Belum ada data tersimpan untuk grafik.", canvas.width/2, canvas.height/2);
+    document.getElementById("chartLegend").innerHTML = "";
+    document.getElementById("totalInfo").innerText = "";
+}
+
+function downloadChartImage(){
+    var container = document.getElementById("chartSection");
+    var originalBg = container.style.background;
+    container.style.background = "#ffffff";
+
+    html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
+    }).then(function(canvas){
+        container.style.background = originalBg;
+        var link = document.createElement("a");
+        link.download = "grafik-terapis-" + new Date().toISOString().slice(0,10) + ".png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        showToast("Grafik berhasil diunduh!");
+    }).catch(function(err){
+        container.style.background = originalBg;
+        console.error(err);
+        alert("Gagal mengunduh gambar grafik.");
+    });
+}
+
+// ===== PIE CHART SYSTEM =====
+function populatePieTherapistFilter(){
+    var select = document.getElementById("pieTherapist");
+    var currentVal = select.value;
+    var allTherapists = [];
+    var thSet = {};
+    accordionData.forEach(function(item){
+        item.data.forEach(function(d){ if(d.therapist !== "-") thSet[d.therapist] = true; });
+    });
+    for(var t in thSet){ allTherapists.push(t); }
+
+    select.innerHTML = '<option value="all">Semua Terapis</option>';
+    allTherapists.forEach(function(t){
+        var opt = document.createElement("option");
+        opt.value = t;
+        opt.innerText = t;
+        select.appendChild(opt);
+    });
+    select.value = currentVal;
+}
+
+function populatePieMonthFilter(){
+    var select = document.getElementById("pieMonth");
+    var currentVal = select.value;
+    var months = [];
+    var monthSet = {};
+    accordionData.forEach(function(item){ monthSet[formatTahunBulan(item.date)] = true; });
+    for(var m in monthSet){ months.push(m); }
+    months.sort();
+
+    select.innerHTML = '<option value="all">Semua Bulan</option>';
+    var bulan = ["","Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    months.forEach(function(m){
+        var parts = m.split("-");
+        var opt = document.createElement("option");
+        opt.value = m;
+        opt.innerText = bulan[parseInt(parts[1])] + " " + parts[0];
+        select.appendChild(opt);
+    });
+    select.value = currentVal;
+}
+
+function updatePieRange(){
+    var start = parseInt(document.getElementById("pieRangeStart").value);
+    var end = parseInt(document.getElementById("pieRangeEnd").value);
+    if(start > end){
+        document.getElementById("pieRangeLabel").innerText = end + " - " + start;
+    } else {
+        document.getElementById("pieRangeLabel").innerText = start + " - " + end;
+    }
+    updatePieChart();
+}
+
+function updatePieChart(){
+    var period = document.getElementById("piePeriod").value;
+    var weekNum = document.getElementById("pieWeek").value;
+    var monthFilter = document.getElementById("pieMonth").value;
+    var therapistFilter = document.getElementById("pieTherapist").value;
+    var rangeStart = parseInt(document.getElementById("pieRangeStart").value);
+    var rangeEnd = parseInt(document.getElementById("pieRangeEnd").value);
+    if(rangeStart > rangeEnd){ var t=rangeStart; rangeStart=rangeEnd; rangeEnd=t; }
+
+    document.getElementById("pieWeek").classList.toggle("visible", period === "weekly");
+
+    if(accordionData.length === 0){
+        drawEmptyPie();
+        return;
+    }
+
+    var filtered = accordionData.slice();
+    if(monthFilter !== "all"){
+        filtered = filtered.filter(function(item){ return formatTahunBulan(item.date) === monthFilter; });
+    }
+
+    var therapistCounts = {};
+    var totalCount = 0;
+
+    filtered.forEach(function(item){
+        if(period === "weekly"){
+            var wk = getWeekOfMonth(item.date);
+            if(wk != weekNum) return;
+        }
+        var dayOfMonth = getDayOfMonth(item.date);
+        if(dayOfMonth < rangeStart || dayOfMonth > rangeEnd) return;
+        item.data.forEach(function(d){
+            if(d.therapist !== "-"){
+                if(therapistFilter !== "all" && d.therapist !== therapistFilter) return;
+                if(!therapistCounts[d.therapist]) therapistCounts[d.therapist] = 0;
+                therapistCounts[d.therapist]++;
+                totalCount++;
+            }
+        });
+    });
+
+    if(totalCount === 0){
+        drawEmptyPie();
+        return;
+    }
+
+    var pieData = [];
+    var allTherapists = [];
+    var thSet = {};
+    accordionData.forEach(function(item){
+        item.data.forEach(function(d){ if(d.therapist !== "-") thSet[d.therapist] = true; });
+    });
+    for(var t in thSet){ allTherapists.push(t); }
+
+    var displayTherapists = therapistFilter === "all" ? allTherapists : [therapistFilter];
+
+    displayTherapists.forEach(function(t){
+        var count = therapistCounts[t] || 0;
+        if(count > 0){
+            pieData.push({
+                name: t,
+                count: count,
+                percent: (count / totalCount * 100).toFixed(1),
+                color: getTherapistColor(allTherapists.indexOf(t))
+            });
+        }
+    });
+
+    pieData.sort(function(a,b){ return b.count - a.count; });
+
+    drawPieChart(pieData, totalCount);
+    renderPieLegend(pieData, totalCount);
+    document.getElementById("pieTotalNum").innerText = totalCount;
+}
+
+function drawPieChart(data, total){
+    var canvas = document.getElementById("pieChart");
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width;
+    var H = canvas.height;
+    var centerX = W / 2;
+    var centerY = H / 2;
+    var radius = Math.min(W, H) / 2 - 20;
+    var innerRadius = radius * 0.55;
+
+    ctx.clearRect(0, 0, W, H);
+
+    var startAngle = -Math.PI / 2;
+
+    data.forEach(function(slice){
+        var sliceAngle = (slice.count / total) * (Math.PI * 2);
+        var endAngle = startAngle + sliceAngle;
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = slice.color;
+        ctx.fill();
+
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#ffffff";
+        ctx.stroke();
+
+        if(slice.count / total > 0.05){
+            var midAngle = startAngle + sliceAngle / 2;
+            var labelRadius = radius * 0.75;
+            var labelX = centerX + Math.cos(midAngle) * labelRadius;
+            var labelY = centerY + Math.sin(midAngle) * labelRadius;
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 13px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(slice.percent + "%", labelX, labelY);
+        }
+
+        startAngle = endAngle;
+    });
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+}
+
+function renderPieLegend(data, total){
+    var container = document.getElementById("pieLegend");
+    container.innerHTML = "";
+
+    data.forEach(function(item){
+        var row = document.createElement("div");
+        row.className = "pie-legend-row";
+        row.innerHTML = 
+            '<div class="pie-legend-dot" style="background:' + item.color + '"></div>' +
+            '<div class="pie-legend-info">' +
+                '<div class="pie-legend-name">' + item.name + '</div>' +
+                '<div class="pie-legend-count">' + item.count + ' anak</div>' +
+            '</div>' +
+            '<div class="pie-legend-percent">' + item.percent + '%</div>';
+        container.appendChild(row);
+    });
+}
+
+function drawEmptyPie(){
+    var canvas = document.getElementById("pieChart");
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width;
+    var H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "#e5e7eb";
+    ctx.beginPath();
+    ctx.arc(W/2, H/2, Math.min(W,H)/2 - 20, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = "#9ca3af";
+    ctx.font = "14px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Tidak ada data", W/2, H/2);
+    document.getElementById("pieLegend").innerHTML = '<div class="no-data-msg">Belum ada data untuk periode ini.</div>';
+    document.getElementById("pieTotalNum").innerText = "0";
+}
+
+function downloadPieImage(){
+    var container = document.getElementById("pieSection");
+    var originalBg = container.style.background;
+    container.style.background = "#ffffff";
+
+    html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
+    }).then(function(canvas){
+        container.style.background = originalBg;
+        var link = document.createElement("a");
+        link.download = "grafik-pie-terapis-" + new Date().toISOString().slice(0,10) + ".png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        showToast("Grafik Pie berhasil diunduh!");
+    }).catch(function(err){
+        container.style.background = originalBg;
+        console.error(err);
+        alert("Gagal mengunduh gambar pie.");
+    });
+}
+
+// ===== INIT =====
+function downloadJSON(){
+    if(accordionData.length === 0){
+        alert("Belum ada data tersimpan untuk diunduh!");
+        return;
+    }
+    var dataStr = JSON.stringify(accordionData, null, 2);
+    var blob = new Blob([dataStr], {type: "application/json"});
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.download = "data-riwayat-terapis-" + new Date().toISOString().slice(0,10) + ".json";
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast("Data JSON berhasil diunduh!");
+}
+
+window.addEventListener("load", function(){
+    loadFromStorage();
+    renderAccordion();
+    populateChartMonthFilter();
+    populateTherapistFilter();
+    populatePieMonthFilter();
+    populatePieTherapistFilter();
+    updateChart();
+    updatePieChart();
+
+    var today = new Date();
+    var yyyy = today.getFullYear();
+    var mm = String(today.getMonth()+1).padStart(2,'0');
+    var dd = String(today.getDate()).padStart(2,'0');
+    document.getElementById("datePicker").value = yyyy + "-" + mm + "-" + dd;
+});
+
+window.addEventListener("resize", function(){
+    updateChart();
+    updatePieChart();
+});
+</script>
+
+</body>
+</html>
